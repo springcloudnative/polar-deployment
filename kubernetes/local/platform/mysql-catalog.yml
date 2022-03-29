@@ -1,57 +1,59 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: polar-mysql-catalog
-  labels:
-    app: polar-mysql-catalog
-spec:
-  selector:
-    matchLabels:
-      app: polar-mysql-catalog
-  template:
-    metadata:
-      labels:
-        app: polar-mysql-catalog
-    spec:
-      containers:
-      - name: polar-mysql-catalog
-        image: mysql:8.0
-        command: [ "sleep" ]
-        args: [ "infinity" ]
-        env:
-          - name: MYSQL_DATABASE
-            value: polardb_catalog
-          - name: MYSQL_USER
-            value: user
-          - name: MYSQL_PASSWORD
-            value: password
-          - name: MYSQL_ROOT_PASSWORD
-            value: password   
-        ports:
-          - containerPort: 3306                             
-        resources:
-          requests:
-            cpu: 100m
-            memory: 60Mi
-          limits:
-            cpu: 200m
-            memory: 120Mi
-
----
-
+# Define a 'Service' To Expose MySQL to Other Services
 apiVersion: v1
 kind: Service
 metadata:
   name: polar-mysql-catalog
   labels:
     app: polar-mysql-catalog
+    tier: database
 spec:
-  type: ExternalName
-  externalName: host.docker.internal
+  ports:
+    - port: 3306
+      targetPort: 3306
   selector:
     app: polar-mysql-catalog
-  ports:
-  - protocol: TCP
-    port: 3306
-    targetPort: 3306
-
+    tier: database
+  clusterIP: None # DNS is used, so clusterIP is not needed
+---
+# Deployment specification begins here
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polar-mysql-catalog
+  labels:
+    app: polar-mysql-catalog
+    tier: database
+spec:
+  selector: # mySQL Pod Should contain same labels
+    matchLabels:
+      app: polar-mysql-catalog
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels: # Must match 'Service' and 'Deployment' selectors
+        app: polar-mysql-catalog
+        tier: database
+    spec:
+      containers:
+        - name: polar-mysql-catalog
+          image: mysql:8.0
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_USER
+              value: user
+            - name: MYSQL_PASSWORD
+              value: password              
+            - name: MYSQL_DATABASE
+              value: polardb_catalog
+          ports:
+            - containerPort: 3306
+          resources:
+            requests:
+              cpu: 100m
+              memory: 60Mi
+            limits:
+              cpu: 1500m
+              memory: 512Mi
