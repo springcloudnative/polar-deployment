@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: polar-mysql-catalog-conf
-data:
- host: polar-mysql-catalog
- name: polardb_catalog  
