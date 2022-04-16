@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.8'
 
 services:
 
@@ -7,22 +7,26 @@ services:
   config-service:
     image: ernestoacostacuba/config-service:0.0.1-SNAPSHOT
     container_name: config-service
+    profiles:
+      - "configuration"
     ports:
       - '8888:8888'
     environment:
       # Buildpacks environment variable to configure the number of threads in memory calculation
-      - BPL_JVM_THREAD_COUNT=50
+      BPL_JVM_THREAD_COUNT: 50
       # Buildpacks environment variable to enable debug through a socket on port 9888
-      - BPL_DEBUG_ENABLED=true
-      - BPL_DEBUG_PORT=9888
+      BPL_DEBUG_ENABLED: 'true'
+      BPL_DEBUG_PORT: 9888
     networks:
       - catalog-network
 
   catalog-service:
     image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
     container_name: catalog-service
+    profiles:
+      - "catalog"    
     environment:
-      BPL_DEBUG_ENABLED: true   # Activates the JVM configuration for accepting debug connections
+      BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
       BPL_DEBUG_PORT: 8001      # Debug connections are accepted via a socket on port 8001
       BPL_JVM_THREAD_COUNT: 50
       SPRING_DATASOURCE_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useSSL=false&allowPublicKeyRetrieval=true
@@ -47,15 +51,18 @@ services:
     image: mysql:8.0
     container_name: polar-mysql
     restart: always
+    profiles:
+      - "backend"    
     environment:
       MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: polardb_catalog
     ports:
       - '3306:3306'
     expose:
       - '3306'
     volumes:
       - ./polar_mysql_db:/var/lib/mysql:z
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init-script.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h",  "localhost"]
       timeout: 45s
@@ -67,15 +74,65 @@ services:
   adminer:
     image: adminer
     container_name: adminer
+    profiles:
+      - "backend"    
     ports:
       - '9090:8080'
     depends_on:
-      - polar_mysql_catalog
+      - polar-mysql
     networks:
       - catalog-network
 
+  sonardb:
+    image: postgres:13
+    container_name: sonardb
+    restart: unless-stopped
+    profiles:
+      - "sonar"    
+    environment:
+      - POSTGRES_USER=sonarqube
+      - POSTGRES_PASSWORD=sonarpass
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - postgresql:/var/lib/postgresql:z
+      - postgresql_data:/var/lib/postgresql/data:z
+    networks:
+      - catalog-network
+  sonarqube:
+    image: sonarqube:8.9.8-community #8.9.8-developer
+    profiles:
+      - "sonar"    
+    expose:
+      - 9000    
+    depends_on:
+      - sonardb
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonarqube
+      - sonar.jdbc.username=sonarqube
+      - sonar.jdbc.password=sonarpass   
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf:z
+      - sonarqube_data:/opt/sonarqube/data:z
+      - sonarqube_extensions:/opt/sonarqube/extensions:z
+      - sonarqube_logs:/opt/sonarqube/logs:z
+    ports:
+      - "9127.0.0.1:9000:9000"
+    networks:
+      - catalog-network
+
+
 volumes:
-  my-db:
+  polar_mysql_db:
+  sonarqube_conf:
+  sonarqube_logs:
+  sonarqube_data:
+  sonarqube_extensions:
+  postgresql:
+  postgresql_data:
 
 networks:
   catalog-network:
