@@ -7,8 +7,6 @@ services:
   config-service:
     image: ernestoacostacuba/config-service
     container_name: config-service
-    profiles:
-      - "configuration"
     ports:
       - '8888:8888'
     environment:
@@ -23,8 +21,7 @@ services:
   catalog-service:
     image: ernestoacostacuba/catalog-service
     container_name: catalog-service
-    profiles:
-      - "catalog"    
+   
     environment:
       BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
       BPL_DEBUG_PORT: 8001      # Debug connections are accepted via a socket on port 8001
@@ -48,8 +45,7 @@ services:
   order-service:
     image: ernestoacostacuba/order-service
     container_name: order-service
-    profiles:
-      - "order"    
+ 
     environment:
       BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
       BPL_DEBUG_PORT: 8002      # Debug connections are accepted via a socket on port 8001
@@ -73,8 +69,7 @@ services:
     image: mysql:8.0
     container_name: polar-mysql
     restart: always
-    profiles:
-      - "backend"    
+ 
     environment:
       MYSQL_ROOT_PASSWORD: 'password'
       MYSQL_DATABASE: polardb_catalog
@@ -96,8 +91,7 @@ services:
   adminer:
     image: adminer
     container_name: adminer
-    profiles:
-      - "monitor"    
+   
     ports:
       - '9090:8080'
     networks:
@@ -107,8 +101,7 @@ services:
     image: postgres:13
     container_name: sonardb
     restart: unless-stopped
-    profiles:
-      - "sonar"    
+ 
     environment:
       - POSTGRES_USER=sonarqube
       - POSTGRES_PASSWORD=sonarpass
@@ -120,8 +113,7 @@ services:
       - catalog-network
   sonarqube:
     image: sonarqube:8.9.8-community #8.9.8-developer
-    profiles:
-      - "sonar"    
+  
     expose:
       - 9000    
     depends_on:
