@@ -5,7 +5,7 @@ services:
 # Applications
 
   config-service:
-    image: ernestoacostacuba/config-service
+    image: ernestoacostacuba/config-service:0.0.1-SNAPSHOT
     container_name: config-service
     ports:
       - '8888:8888'
@@ -19,7 +19,7 @@ services:
       - catalog-network
 
   catalog-service:
-    image: ernestoacostacuba/catalog-service
+    image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
     container_name: catalog-service
    
     environment:
@@ -43,7 +43,7 @@ services:
       - catalog-network
 
   order-service:
-    image: ernestoacostacuba/order-service
+    image: ernestoacostacuba/order-service:0.0.1-SNAPSHOT
     container_name: order-service
  
     environment:
