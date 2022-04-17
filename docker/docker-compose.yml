@@ -5,7 +5,7 @@ services:
 # Applications
 
   config-service:
-    image: ernestoacostacuba/config-service:0.0.1-SNAPSHOT
+    image: ernestoacostacuba/config-service
     container_name: config-service
     profiles:
       - "configuration"
@@ -21,7 +21,7 @@ services:
       - catalog-network
 
   catalog-service:
-    image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
+    image: ernestoacostacuba/catalog-service
     container_name: catalog-service
     profiles:
       - "catalog"    
@@ -39,6 +39,28 @@ services:
     ports:
       - '8001:8001' # The port where the JVM will listen for debug connections
       - '9001:9001'
+    depends_on:
+      polar-mysql:
+        condition: service_healthy
+    networks:
+      - catalog-network
+
+  order-service:
+    image: ernestoacostacuba/order-service
+    container_name: order-service
+    profiles:
+      - "order"    
+    environment:
+      BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
+      BPL_DEBUG_PORT: 8002      # Debug connections are accepted via a socket on port 8001
+      BPL_JVM_THREAD_COUNT: 50
+      POLAR_CATALOG_SERVICE_URI: http://catalog-service:9001
+      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
+      SPRING_R2DBC_URL: r2dbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_FLYWAY_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    ports:
+      - '8002:8002' # The port where the JVM will listen for debug connections
+      - '9002:9002'
     depends_on:
       polar-mysql:
         condition: service_healthy
