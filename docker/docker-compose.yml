@@ -75,11 +75,9 @@ services:
     image: adminer
     container_name: adminer
     profiles:
-      - "backend"    
+      - "monitor"    
     ports:
       - '9090:8080'
-    depends_on:
-      - polar-mysql
     networks:
       - catalog-network
 
