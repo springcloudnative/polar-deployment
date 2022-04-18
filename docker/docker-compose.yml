@@ -21,7 +21,6 @@ services:
   catalog-service:
     image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
     container_name: catalog-service
-   
     environment:
       BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
       BPL_DEBUG_PORT: 8001      # Debug connections are accepted via a socket on port 8001
@@ -45,7 +44,6 @@ services:
   order-service:
     image: ernestoacostacuba/order-service:0.0.1-SNAPSHOT
     container_name: order-service
- 
     environment:
       BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
       BPL_DEBUG_PORT: 8002      # Debug connections are accepted via a socket on port 8001
@@ -63,57 +61,8 @@ services:
     networks:
       - catalog-network
 
- # Backing Services
-
-  polar-mysql:
-    image: mysql:8.0
-    container_name: polar-mysql
-    restart: always
- 
-    environment:
-      MYSQL_ROOT_PASSWORD: 'password'
-      MYSQL_DATABASE: polardb_catalog
-    ports:
-      - '3306:3306'
-    expose:
-      - '3306'
-    volumes:
-      - ./polar_mysql_db:/var/lib/mysql:z
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init-script.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h",  "localhost"]
-      timeout: 45s
-      interval: 10s
-      retries: 10
-    networks:
-      - catalog-network
-
-  adminer:
-    image: adminer
-    container_name: adminer
-   
-    ports:
-      - '9090:8080'
-    networks:
-      - catalog-network
-
-  sonardb:
-    image: postgres:13
-    container_name: sonardb
-    restart: unless-stopped
- 
-    environment:
-      - POSTGRES_USER=sonarqube
-      - POSTGRES_PASSWORD=sonarpass
-      - POSTGRES_DB=sonarqube
-    volumes:
-      - postgresql:/var/lib/postgresql:z
-      - postgresql_data:/var/lib/postgresql/data:z
-    networks:
-      - catalog-network
   sonarqube:
     image: sonarqube:8.9.8-community #8.9.8-developer
-  
     expose:
       - 9000    
     depends_on:
@@ -136,6 +85,59 @@ services:
     networks:
       - catalog-network
 
+ # Backing Services
+
+  polar-mysql:
+    image: mysql:8.0
+    container_name: polar-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: polardb_catalog
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - ./polar_mysql_db:/var/lib/mysql:z
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init-script.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h",  "localhost"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    networks:
+      - catalog-network
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - '9090:8080'
+    networks:
+      - catalog-network
+
+  sonardb:
+    image: postgres:13
+    container_name: sonardb
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=sonarqube
+      - POSTGRES_PASSWORD=sonarpass
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - postgresql:/var/lib/postgresql:z
+      - postgresql_data:/var/lib/postgresql/data:z
+    networks:
+      - catalog-network
+
+  polar-redis:
+    image: redis:6.2
+    container_name: polar-redis
+    ports:
+      - 6379:6379
+    networks:
+      - catalog-network
 
 volumes:
   polar_mysql_db:
