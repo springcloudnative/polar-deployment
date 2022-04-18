@@ -191,3 +191,5 @@ Finally, remove the temporary branch:
 $ git branch -d hotfix-1.2.1
 Deleted branch hotfix-1.2.1 (was abbe5d6).
 ```
+
+DOCKER HUB REGISTRY_TOKEN=4ce76d6d-c835-4dc9-9877-6c60d583a05f
