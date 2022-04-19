@@ -32,10 +32,17 @@ connect_registry_to_kind_network: create_local_docker_registry
 connect_registry_to_kind: connect_registry_to_kind_network
 	kubectl apply -f ./kind_configmap.yml
 
+deploy_nginx_ingress_controller:
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+
+deploy_manifests_to_cluster:
+	kubectl apply -f configs && kubectl apply -f secrets && kubectl apply -f services
+
 # Rule to create a new version of the "create_kind_cluster" rule,
 ## creating both, the cluster and the registry and link them together
 create_kind_cluster_with_registry:
-	$(MAKE) create_kind_cluster && $(MAKE) connect_registry_to_kind
+	$(MAKE) create_kind_cluster && $(MAKE) connect_registry_to_kind && $(MAKE) deploy_manifests_to_cluster 
 
 delete_kind_cluster: delete_local_docker_registry 
 	kind delete cluster --name polar-cluster
