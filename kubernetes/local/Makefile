@@ -1,7 +1,8 @@
 .PHONY: run_website stop_website create_kind_cluster \
 	create_local_docker_registry connect_registry_to_kind_network \
 	connect_registry_to_kind create_kind_cluster_with_registry \
-	delete_kind_cluster delete_local_docker_registry
+	delete_kind_cluster delete_local_docker_registry deploy_manifests_to_cluster \
+	deploy_nginx_ingress_controller
 
 # run_website:
 # 	docker build -t explorecalifornia.com . && \
