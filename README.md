@@ -5,6 +5,15 @@ Development_Work: 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
 
 IntelliJ IDEA GitHub integration plugin: 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
 
+# KIND
+If you have more than one context, make sure kubectl is configured to use the cluster desired. You can verify which is the current context by running this command.
+```
+kubectl config current-context
+```
+If the result is different than the cluster desired, you can change the current context as follows.
+```
+kubectl config use-context <cluster_name>
+```
 # A successful Git branching model
 
 ## The main branches
