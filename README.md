@@ -1,3 +1,10 @@
+########################
+Github tokens
+########################
+Development_Work: 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
+
+IntelliJ IDEA GitHub integration plugin: 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
+
 # A successful Git branching model
 
 ## The main branches
