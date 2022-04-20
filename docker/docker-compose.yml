@@ -10,9 +10,7 @@ services:
     ports:
       - '8888:8888'
     environment:
-      # Buildpacks environment variable to configure the number of threads in memory calculation
       BPL_JVM_THREAD_COUNT: 50
-      # Buildpacks environment variable to enable debug through a socket on port 9888
       BPL_DEBUG_ENABLED: 'true'
       BPL_DEBUG_PORT: 9888
     networks:
@@ -21,9 +19,15 @@ services:
   catalog-service:
     image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
     container_name: catalog-service
+    depends_on:
+      polar-mysql:
+        condition: service_healthy  
+    ports:
+      - '8001:8001'
+      - '9001:9001'
     environment:
-      BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
-      BPL_DEBUG_PORT: 8001      # Debug connections are accepted via a socket on port 8001
+      BPL_DEBUG_ENABLED: 'true' 
+      BPL_DEBUG_PORT: 8001 
       BPL_JVM_THREAD_COUNT: 50
       SPRING_DATASOURCE_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_CLOUD_CONFIG_URI: http://config-service:8888
@@ -32,45 +36,38 @@ services:
       MYSQL_ROOT_PASSWORD: 'password'
       DB_HOST: 'polar-mysql'
       DB_NAME: ':polardb_catalog'
-    ports:
-      - '8001:8001' # The port where the JVM will listen for debug connections
-      - '9001:9001'
-    depends_on:
-      polar-mysql:
-        condition: service_healthy
+
     networks:
       - catalog-network
 
   order-service:
     image: ernestoacostacuba/order-service:0.0.1-SNAPSHOT
     container_name: order-service
+    depends_on:
+      polar-mysql:
+        condition: service_healthy
+    ports:
+      - '8002:8002'
+      - '9002:9002'
     environment:
-      BPL_DEBUG_ENABLED: 'true'   # Activates the JVM configuration for accepting debug connections
-      BPL_DEBUG_PORT: 8002      # Debug connections are accepted via a socket on port 8001
+      BPL_DEBUG_ENABLED: 'true' 
+      BPL_DEBUG_PORT: 8002    
       BPL_JVM_THREAD_COUNT: 50
       POLAR_CATALOG_SERVICE_URI: http://catalog-service:9001
       SPRING_CLOUD_CONFIG_URI: http://config-service:8888
       SPRING_R2DBC_URL: r2dbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_FLYWAY_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-    ports:
-      - '8002:8002' # The port where the JVM will listen for debug connections
-      - '9002:9002'
-    depends_on:
-      polar-mysql:
-        condition: service_healthy
     networks:
       - catalog-network
 
   sonarqube:
-    image: sonarqube:8.9.8-community #8.9.8-developer
+    image: sonarqube:8.9.8-community 
     expose:
       - 9000    
     depends_on:
       - sonardb
-    environment:
-      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonarqube
-      - sonar.jdbc.username=sonarqube
-      - sonar.jdbc.password=sonarpass   
+    ports:
+      - "9127.0.0.1:9000:9000"   
     ulimits:
       nofile:
         soft: 65536
@@ -80,8 +77,10 @@ services:
       - sonarqube_data:/opt/sonarqube/data:z
       - sonarqube_extensions:/opt/sonarqube/extensions:z
       - sonarqube_logs:/opt/sonarqube/logs:z
-    ports:
-      - "9127.0.0.1:9000:9000"
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonarqube
+      - sonar.jdbc.username=sonarqube
+      - sonar.jdbc.password=sonarpass
     networks:
       - catalog-network
 
@@ -101,11 +100,8 @@ services:
     image: mysql:8.0
     container_name: polar-mysql
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 'password'
-      MYSQL_DATABASE: polardb_catalog
     ports:
-      - '3306:3306'
+      - '3306:3306'    
     expose:
       - '3306'
     volumes:
@@ -116,6 +112,9 @@ services:
       timeout: 45s
       interval: 10s
       retries: 10
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: polardb_catalog      
     networks:
       - catalog-network
 
@@ -131,13 +130,13 @@ services:
     image: postgres:13
     container_name: sonardb
     restart: unless-stopped
+    volumes:
+      - postgresql:/var/lib/postgresql:z
+      - postgresql_data:/var/lib/postgresql/data:z
     environment:
       - POSTGRES_USER=sonarqube
       - POSTGRES_PASSWORD=sonarpass
       - POSTGRES_DB=sonarqube
-    volumes:
-      - postgresql:/var/lib/postgresql:z
-      - postgresql_data:/var/lib/postgresql/data:z
     networks:
       - catalog-network
 
