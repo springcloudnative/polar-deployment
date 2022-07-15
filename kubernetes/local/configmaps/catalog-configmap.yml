@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-service-conf
+data:
+  bpl-jvm-thread-count: "50"
+  db-username: catalog_user
+  polar-catalog-service-uri: http://catalog-service

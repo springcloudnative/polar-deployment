@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-service-conf
+data:
+  bpl-jvm-thread-count: "50"
+  db-username: order_user
+  polar-catalog-service-uri: http://catalog-service
+  polar-order-service-uri: http://order-service

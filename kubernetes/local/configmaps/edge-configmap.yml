@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-service-conf
+data:
+  polar-catalog-service-uri: http://catalog-service
+  spa-url: http://polar-ui
+  spring-redis-host: polar-redis

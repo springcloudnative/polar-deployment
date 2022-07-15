@@ -27,6 +27,7 @@ services:
       BPL_JVM_THREAD_COUNT: 50
       SPRING_DATASOURCE_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_CLOUD_CONFIG_URI: http://config-service:8888
+      SPRING_PROFILES_ACTIVE: 'mysqldev'
       DB_USER: 'catalog_user'
       DB_PASSWORD: 'Y2F0YWxvZ191c2VyCg=='
       MYSQL_ROOT_PASSWORD: 'password'
@@ -42,21 +43,6 @@ services:
       - catalog-network
 
  # Backing Services
-
-  polar-postgresql:
-      image: postgres:14.1-alpine
-      container_name: polar-postgresql
-      restart: always
-      environment:
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=postgres
-      ports:
-        - '5432:5432'
-      volumes: 
-        - ./polar_postgresql_db:/var/lib/postgresql/data:z
-        - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
-      networks:
-        - catalog-network
 
   polar-mysql:
     image: mysql:8.0
@@ -76,6 +62,8 @@ services:
       timeout: 45s
       interval: 10s
       retries: 10
+    depends_on:
+      - config-service      
     networks:
       - catalog-network
 
@@ -85,8 +73,7 @@ services:
     ports:
       - '9090:8080'
     depends_on:
-      # - polar-mysql
-      - polar-postgresql
+      - polar-mysql
     networks:
       - catalog-network
 
