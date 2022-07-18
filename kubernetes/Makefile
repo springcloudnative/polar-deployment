@@ -1,7 +1,7 @@
 .PHONY: create_local_docker_registry connect_registry_to_kind_network \
 	connect_registry_to_kind create_kind_cluster_with_registry_and_nginx_ingress \
 	delete_kind_cluster delete_local_docker_registry deploy_manifests_to_cluster \
-	deploy_nginx_ingress_controller
+	deploy_dev_manifests_to_cluster deploy_nginx_ingress_controller
 
 
 docker_registry := polar-local-registry
@@ -54,6 +54,11 @@ deploy_manifests_to_cluster:
 	@echo -e "🔌 Deploying configmaps, secrets and backend services into the kind cluster..."
 	kubectl apply -f configmaps && kubectl apply -f secrets && kubectl apply -f services
 	@echo -e "\n-----------------------------------------------------\n"
+
+deploy_dev_manifests_to_cluster: create_kind_cluster
+	@echo -e "🔌 Deploying development configmaps, secrets and backend services into the kind cluster..."
+	kubectl apply -f ./local/configmaps && kubectl apply -f ./local/secrets && kubectl apply -f ./local/platform
+	@echo -e "\n-----------------------------------------------------\n"	
 
 # Rule to create a new version of the "create_kind_cluster" rule,
 ## creating both, the cluster and the registry and link them together
