@@ -29,7 +29,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-service:8888
       SPRING_PROFILES_ACTIVE: 'mysqldev'
       DB_USER: 'catalog_user'
-      DB_PASSWORD: 'Y2F0YWxvZ191c2VyCg=='
+      DB_PASSWORD: 'TXlzcWwzMjFDYXRhbG9n'
       MYSQL_ROOT_PASSWORD: 'password'
       DB_HOST: 'polar-mysql'
       DB_NAME: ':polardb_catalog'

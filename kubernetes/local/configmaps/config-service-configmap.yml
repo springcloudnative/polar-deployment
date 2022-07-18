@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: config-service-conf
 data:
-  spring-cloud-config-uri: http://config-service
+  spring_cloud_config_uri: http://config-service

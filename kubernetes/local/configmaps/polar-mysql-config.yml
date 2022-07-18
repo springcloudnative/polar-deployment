@@ -3,8 +3,8 @@ kind: ConfigMap
 metadata:
   name: polar-mysql-conf
 data:
-  polar-mysql-user: user
-  polar-mysql-database: polardb_catalog
-  polar-mysql-database-host: polar-mysql
-  spring-r2dbc-url: r2dbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-  spring-flyway-url: jdbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+  polar_mysql_user: user
+  polar_mysql_database: polardb_catalog
+  polar_mysql_database_host: polar-mysql
+  spring_r2dbc_url: r2dbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+  spring_flyway_url: jdbc:mysql://polar-mysql:3306/polardb_catalog?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true

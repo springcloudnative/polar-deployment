@@ -44,22 +44,22 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: polar-mysql-creds
-                  key: polar-mysql-root-pasword
+                  key: polar_mysql_root_pasword
             - name: MYSQL_USER
               valueFrom:
                 configMapKeyRef:
                   name: polar-mysql-conf
-                  key: polar-mysql-user
+                  key: polar_mysql_user
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: polar-mysql-creds
-                  key: polar-mysql-pasword
+                  key: polar_mysql_pasword
             - name: MYSQL_DATABASE
               valueFrom:
                 configMapKeyRef:
                   name: polar-mysql-conf
-                  key: polar-mysql-database
+                  key: polar_mysql_database
           ports:
             - containerPort: 3306
           resources:

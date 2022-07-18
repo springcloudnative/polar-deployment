@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: catalog-service-conf
 data:
-  bpl-jvm-thread-count: "50"
-  db-username: catalog_user
-  polar-catalog-service-uri: http://catalog-service
+  bpl_jvm_thread_count: "50"
+  db_username: catalog_user
+  polar_catalog-service_uri: http://catalog-service

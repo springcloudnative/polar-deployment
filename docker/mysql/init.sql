@@ -1,6 +1,6 @@
 GRANT ALL PRIVILEGES ON *. * TO 'root'@'%' WITH GRANT OPTION;
-CREATE USER 'catalog_user'@'%' IDENTIFIED BY 'Y2F0YWxvZ191c2Vy';
-CREATE USER 'order_user'@'%' IDENTIFIED BY 'b3JkZXJfdXNlcg==';
+CREATE USER 'catalog_user'@'%' IDENTIFIED BY 'TXlzcWwzMjFDYXRhbG9n';
+CREATE USER 'order_user'@'%' IDENTIFIED BY 'TXlzcWwzMjFPcmRlcg==';
 GRANT CREATE on polardb_catalog.* TO 'catalog_user'@'%' WITH GRANT OPTION;
 GRANT CREATE on polardb_catalog.* TO 'order_user'@'%' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON polardb_catalog.books TO 'catalog_user'@'%'  WITH GRANT OPTION;
