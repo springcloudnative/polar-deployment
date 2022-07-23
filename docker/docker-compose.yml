@@ -9,6 +9,7 @@ services:
     container_name: config-service
     ports:
       - '8888:8888'
+      - '9888:9888'
     environment:
       # Buildpacks environment variable to configure the number of threads in memory calculation
       - BPL_JVM_THREAD_COUNT=50
@@ -19,7 +20,7 @@ services:
       - catalog-network
 
   catalog-service:
-    image: ernestoacostacuba/catalog-service:0.0.1-SNAPSHOT
+    image: ernestoacostacuba/catalog-service:latest
     container_name: catalog-service
     environment:
       BPL_DEBUG_ENABLED: "true"   # Activates the JVM configuration for accepting debug connections
@@ -29,7 +30,7 @@ services:
       SPRING_CLOUD_CONFIG_URI: http://config-service:8888
       SPRING_PROFILES_ACTIVE: 'mysqldev'
       DB_USER: 'catalog_user'
-      DB_PASSWORD: 'Y2F0YWxvZ191c2VyCg=='
+      DB_PASSWORD: 'TXlzcWwzMjFDYXRhbG9n'
       MYSQL_ROOT_PASSWORD: 'password'
       DB_HOST: 'polar-mysql'
       DB_NAME: ':polardb_catalog'
@@ -42,21 +43,68 @@ services:
     networks:
       - catalog-network
 
+  order-service:
+    image: ernestoacostacuba/order-service:latest
+    container_name: order-service
+    environment:
+      BPL_DEBUG_ENABLED: "true"   # Activates the JVM configuration for accepting debug connections
+      BPL_DEBUG_PORT: 8002      # Debug connections are accepted via a socket on port 8001
+      BPL_JVM_THREAD_COUNT: 50
+      POLAR_CATALOG_SERVICE_URI: http://catalog-service:9001
+      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
+      SPRING_FLYWAY_URL: jdbc:mysql://polar-mysql:3306/polardb_catalog?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_R2DBC_URL: r2dbc:mysql://polar-mysql:3306/polardb_catalog?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_PROFILES_ACTIVE: 'mysqldev'
+      DB_USER: 'catalog_user'
+      DB_PASSWORD: 'TXlzcWwzMjFDYXRhbG9n'
+      MYSQL_ROOT_PASSWORD: 'password'
+      DB_HOST: 'polar-mysql'
+      DB_NAME: ':polardb_catalog'
+    ports:
+      - '8002:8002' # The port where the JVM will listen for debug connections
+      - '9002:9002'
+    depends_on:
+      polar-mysql:
+        condition: service_healthy
+    networks:
+      - catalog-network
+
+  edge-service:
+    image: ernestoacostacuba/edge-service:latest
+    container_name: edge-service
+    environment:
+      BPL_DEBUG_ENABLED: "true"   # Activates the JVM configuration for accepting debug connections
+      BPL_DEBUG_PORT: 8000      # Debug connections are accepted via a socket on port 8001
+      BPL_JVM_THREAD_COUNT: 50
+      CATALOG_SERVICE_URI: http://catalog-service:9001
+      ORDER_SERVICE_URI: http://order-service:9002
+      SPRING_CLOUD_CONFIG_URI: http://config-service:8888
+      SPRING_REDIS_HOST: polar-redis
+    ports:
+      - '8000:8000' # The port where the JVM will listen for debug connections
+      - '9000:9000'
+    depends_on:
+      - polar-redis
+    networks:
+      - catalog-network
+
  # Backing Services
 
   polar-mysql:
-    image: mysql:8.0
+    image: mysql:latest
     container_name: polar-mysql
+    command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: polardb_catalog
     ports:
       - '3306:3306'
     expose:
       - '3306'
     volumes:
       - ./polar_mysql_db:/var/lib/mysql:z
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./mysql/01.sql:/docker-entrypoint-initdb.d/01.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h",  "localhost"]
       timeout: 45s
@@ -77,9 +125,14 @@ services:
     networks:
       - catalog-network
 
+  polar-redis:
+      image: "redis:7.0"
+      container_name: "polar-redis"
+      ports:
+        - '6379:6379'      
+
 volumes:
-  my-db:
-  polar_postgresql_db:
+  polar_mysql_db:
 
 networks:
   catalog-network:
