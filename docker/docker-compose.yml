@@ -5,7 +5,7 @@ services:
 # Applications
 
   config-service:
-    image: ernestoacostacuba/config-service:0.0.1-SNAPSHOT
+    image: ernestoacostacuba/config-service:latest
     container_name: config-service
     ports:
       - '8888:8888'
