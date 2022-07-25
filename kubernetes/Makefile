@@ -1,8 +1,37 @@
 .PHONY: create_local_docker_registry connect_registry_to_kind_network \
 	connect_registry_to_kind create_kind_cluster_with_registry_and_nginx_ingress \
 	delete_kind_cluster delete_local_docker_registry deploy_manifests_to_cluster \
-	deploy_dev_manifests_to_cluster deploy_nginx_ingress_controller
+	deploy_dev_manifests_to_cluster deploy_nginx_ingress_controller_windows \
+	deploy_nginx_ingress_controller_linux
 
+OSFLAG :=
+ifeq ($(OS),Windows_NT)
+	OSFLAG += -D WIN32
+	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+		OSFLAG += -D AMD64
+	endif
+	ifeq ($(PROCESSOR_ARCHITECTURE),x86)
+		OSFLAG += -D IA32
+	endif
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		OSFLAG += -D LINUX
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		OSFLAG += -D OSX
+	endif
+		UNAME_P := $(shell uname -p)
+	ifeq ($(UNAME_P),x86_64)
+		OSFLAG += -D AMD64
+	endif
+		ifneq ($(filter %86,$(UNAME_P)),)
+	OSFLAG += -D IA32
+		endif
+	ifneq ($(filter arm%,$(UNAME_P)),)
+		OSFLAG += -D ARM
+	endif
+endif
 
 docker_registry := polar-local-registry
 docker_registry_port := 5000
@@ -36,16 +65,27 @@ connect_registry_to_kind: connect_registry_to_kind_network
 	kubectl apply -f ./kind-configmap.yml
 	@echo -e "\n-----------------------------------------------------\n"
 
-deploy_nginx_ingress_controller:
+deploy_nginx_ingress_controller_linux:
+	@echo $(OSFLAG)
 	@echo -e "🔌 Installing NGINX Ingress..."
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	@echo -e "\n-----------------------------------------------------\n"
 	@echo -e "⌛ Waiting for NGINX Ingress to be available..."
-	sleep 10
-#	 kubectl wait --namespace ingress-nginx \
-#  	 	--for=condition=available pod \
-#  	 	--selector=app.kubernetes.io/component=controller \
-#  	 	--timeout=240s
+	timeout 10
+	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=300s
+	kubectl wait --for=condition=Complete job -l app.kubernetes.io/component=admission-webhook -n ingress-nginx --timeout=300s
+	@echo -e "\n"
+	@echo -e "⛵ Happy Sailing!"
+
+deploy_nginx_ingress_controller_windows:
+	@echo $(OSFLAG)
+	@echo -e "🔌 Installing NGINX Ingress..."
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+	@echo -e "\n-----------------------------------------------------\n"
+	@echo -e "⌛ Waiting for NGINX Ingress to be available..."
+	timeout 10
+	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=300s
+	kubectl wait --for=condition=Complete job -l app.kubernetes.io/component=admission-webhook -n ingress-nginx --timeout=300s
 	@echo -e "\n"
 	@echo -e "⛵ Happy Sailing!"
 
