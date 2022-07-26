@@ -129,10 +129,61 @@ services:
       image: "redis:7.0"
       container_name: "polar-redis"
       ports:
-        - '6379:6379'      
+        - '6379:6379'   
+
+ # Event-driven Services  
+  zookeeper:
+    image: zookeeper:3.4.9
+    container_name: zookeeper
+    restart: "no"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zookeeper:2888:3888
+    ports:
+      - "2181:2181"
+    volumes:
+      - ./polar_zookeeper_data/data:/data:z
+      - ./polar_zookeeper_data/datalog:/datalog:z
+    networks:
+      - catalog-network
+
+  kafka:
+    image: confluentinc/cp-kafka:5.3.0
+    container_name: kafka
+    restart: "no"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9091:9091"
+    volumes:
+      - ./polar_kafka_data:/var/lib/kafka/data:z
+    depends_on:
+      - zookeeper 
+    networks:
+      - catalog-network
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    restart: "no"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:19091"
+    ports:
+      - "9000:9000"
+    depends_on:
+      - kafka 
+    networks:
+      - catalog-network
 
 volumes:
   polar_mysql_db:
+  polar_kafka_data:
 
 networks:
   catalog-network:
