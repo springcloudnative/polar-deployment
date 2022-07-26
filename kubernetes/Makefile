@@ -1,35 +1,18 @@
 .PHONY: create_local_docker_registry connect_registry_to_kind_network \
 	connect_registry_to_kind create_kind_cluster_with_registry_and_nginx_ingress \
 	delete_kind_cluster delete_local_docker_registry deploy_manifests_to_cluster \
-	deploy_dev_manifests_to_cluster deploy_nginx_ingress_controller_windows \
-	deploy_nginx_ingress_controller_linux
+	deploy_dev_manifests_to_cluster deploy_nginx_ingress_controller
 
 OSFLAG :=
 ifeq ($(OS),Windows_NT)
-	OSFLAG += -D WIN32
-	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-		OSFLAG += -D AMD64
-	endif
-	ifeq ($(PROCESSOR_ARCHITECTURE),x86)
-		OSFLAG += -D IA32
-	endif
+	OSFLAG += WIN
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		OSFLAG += -D LINUX
+		OSFLAG += LINUX
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		OSFLAG += -D OSX
-	endif
-		UNAME_P := $(shell uname -p)
-	ifeq ($(UNAME_P),x86_64)
-		OSFLAG += -D AMD64
-	endif
-		ifneq ($(filter %86,$(UNAME_P)),)
-	OSFLAG += -D IA32
-		endif
-	ifneq ($(filter arm%,$(UNAME_P)),)
-		OSFLAG += -D ARM
+		OSFLAG += OSX
 	endif
 endif
 
@@ -65,30 +48,18 @@ connect_registry_to_kind: connect_registry_to_kind_network
 	kubectl apply -f ./kind-configmap.yml
 	@echo -e "\n-----------------------------------------------------\n"
 
-deploy_nginx_ingress_controller_linux:
-	@echo $(OSFLAG)
-	@echo -e "🔌 Installing NGINX Ingress..."
+deploy_nginx_ingress_controller:
+	$(info Installing NGINX Ingress...)
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	@echo -e "\n-----------------------------------------------------\n"
-	@echo -e "⌛ Waiting for NGINX Ingress to be available..."
+	@echo -e "Waiting for NGINX Ingress to be available..."
+ifeq ($(findstring WIN,$(OSFLAG)),WIN)
 	timeout 10
+else
+	sleep 10
+endif
 	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=300s
-	kubectl wait --for=condition=Complete job -l app.kubernetes.io/component=admission-webhook -n ingress-nginx --timeout=300s
-	@echo -e "\n"
-	@echo -e "⛵ Happy Sailing!"
-
-deploy_nginx_ingress_controller_windows:
-	@echo $(OSFLAG)
-	@echo -e "🔌 Installing NGINX Ingress..."
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-	@echo -e "\n-----------------------------------------------------\n"
-	@echo -e "⌛ Waiting for NGINX Ingress to be available..."
-	timeout 10
-	kubectl wait --for=condition=Ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=300s
-	kubectl wait --for=condition=Complete job -l app.kubernetes.io/component=admission-webhook -n ingress-nginx --timeout=300s
-	@echo -e "\n"
-	@echo -e "⛵ Happy Sailing!"
-
+	kubectl wait --for=condition=Complete job -l app.kubernetes.io/component=admission-webhook -n ingress-nginx --timeout=300s	
 
 deploy_manifests_to_cluster:
 	@echo -e "🔌 Deploying configmaps, secrets and backend services into the kind cluster..."
@@ -107,9 +78,10 @@ create_kind_cluster_with_registry_and_nginx_ingress:
 	$(MAKE) create_kind_cluster && $(MAKE) connect_registry_to_kind && $(MAKE) deploy_nginx_ingress_controller && $(MAKE) deploy_manifests_to_cluster 
 	@echo -e "\n-----------------------------------------------------\n"
 
-delete_kind_cluster: delete_local_docker_registry 
+delete_kind_cluster: 
 	@echo -e "📦 Removing the local kind cluster..."
 	kind delete cluster --name polar-cluster
+	@echo -e "Cluster destroyed."
 	@echo -e "\n-----------------------------------------------------\n"
 
 delete_local_docker_registry:
@@ -119,3 +91,4 @@ delete_local_docker_registry:
 	else  echo "--> $(docker_registry) does not exists; skipping";  \
 	fi
 	@echo -e "\n-----------------------------------------------------\n"
+		
