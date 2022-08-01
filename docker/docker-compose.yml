@@ -133,7 +133,7 @@ services:
 
  # Event-driven Services  
   zookeeper:
-    image: zookeeper:3.4.9
+    image: wurstmeister/zookeeper
     container_name: zookeeper
     restart: "no"
     environment:
@@ -149,20 +149,26 @@ services:
       - catalog-network
 
   kafka:
-    image: confluentinc/cp-kafka:5.3.0
+    image: wurstmeister/kafka
     container_name: kafka
     restart: "no"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:9093,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:SASL_PLAINTEXT
+      KAFKA_LISTENERS: LISTENER_DOCKER_INTERNAL://0.0.0.0:9093,LISTENER_DOCKER_EXTERNAL://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_BROKER_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafkaserverjaas.conf"
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
     ports:
-      - "9091:9091"
+      - "9092:9092"
+    expose:
+      - "9093"
     volumes:
       - ./polar_kafka_data:/var/lib/kafka/data:z
+      - ./kafka/kafkaserverjaas.conf:/etc/kafka/kafkaserverjaas.conf:ro
     depends_on:
       - zookeeper 
     networks:
@@ -173,7 +179,7 @@ services:
     container_name: kafdrop
     restart: "no"
     environment:
-      KAFKA_BROKERCONNECT: "kafka:19091"
+      KAFKA_BROKERCONNECT: "kafka:9093"
     ports:
       - "9000:9000"
     depends_on:
